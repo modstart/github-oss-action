@@ -1,0 +1,28 @@
+
+name: 'OSS Action'
+description: 'Upload assets to aliyun OSS'
+branding:
+  icon: 'upload-cloud'
+  color: 'yellow'
+inputs:
+  region:
+    required: false
+  endpoint:
+    required: false
+  key-id:
+    required: true
+  key-secret:
+    required: true
+  bucket:
+    required: true
+  assets:
+    required: true
+  timeout:
+    required: false
+    default: 600
+outputs:
+  url:
+    description: oss url
+runs:
+  using: 'node20'
+  main: 'lib/index.js'

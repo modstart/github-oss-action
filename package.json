@@ -1,0 +1,22 @@
+{
+  "name": "oss-action",
+  "version": "1.0.0",
+  "description": "",
+  "main": "lib/index.js",
+  "scripts": {
+    "start": "npm run build -- -w",
+    "build": "ncc build src/index.js -m -o lib"
+  },
+  "keywords": [],
+  "author": "tvrcgo",
+  "license": "ISC",
+  "dependencies": {
+    "@actions/core": "^1.10.0",
+    "@actions/github": "^2.1.1",
+    "ali-oss": "^6.6.0",
+    "fast-glob": "^3.2.4"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "^0.38.1"
+  }
+}
