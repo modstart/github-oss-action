@@ -1,7 +1,6 @@
+# Github Action for OSS
 
-# OSS Action
-
-上传单个文件或文件夹所有文件到 OSS
+使用断点续传，可以上传大文件到 OSS
 
 ## Inputs
 
@@ -15,21 +14,24 @@
 
 ## Outputs
 
-- `url`: 文件在 OSS 上的 url。上传多个文件时，多个 url 用逗号隔开。
+- `none`
 
 ## Usage
 
 ```yaml
-- name: Upload to oss
-  id: upload_to_oss
-  uses: tvrcgo/oss-action@master
+- name: Upload to OSS
+  uses: modstart/github-oss-action@master
   with:
     key-id: ${{ secrets.OSS_KEY_ID }}
     key-secret: ${{ secrets.OSS_KEY_SECRET }}
-    region: oss-cn-shenzhen
-    bucket: tvrcgo
+    region: ${{ secrets.OSS_REGION }}
+    bucket: ${{ secrets.OSS_BUCKET }}
     assets: |
       a/**:/remote-a/
       b/**:/remote-b/
       c.txt:/rc.txt
 ```
+
+## 说明
+
+Fork from [tvrcgo/oss-action](https://github.com/tvrcgo/oss-action)
