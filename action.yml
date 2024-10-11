@@ -20,9 +20,6 @@ inputs:
   timeout:
     required: false
     default: 600
-outputs:
-  url:
-    description: oss url
 runs:
   using: 'node20'
   main: 'lib/index.js'
