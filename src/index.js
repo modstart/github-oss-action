@@ -59,9 +59,9 @@ const fg = require('fast-glob');
         }
 
         for (let rule of assets.split('\n')) {
-            core.info(`Rule: ${rule}`)
             const [src, dst] = rule.split(':')
             const files = fg.sync([src], {dot: false, onlyFiles: true})
+            core.info(`Upload for rule: ${rule} - ${JSON.stringify(files)}`)
             if (!files.length) {
                 continue;
             }
