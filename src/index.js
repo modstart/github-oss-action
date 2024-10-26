@@ -91,7 +91,7 @@ const isLinux = process.platform === 'linux';
             let postData = {}
             successUrls.forEach((url, index) => {
                 // sign url with oss for timeout
-                postData[`url${index}`] = oss.signatureUrl(url, {
+                postData[`URL${index}`] = oss.signatureUrl(url, {
                     expires: callbackUrlExpire
                 })
             })
