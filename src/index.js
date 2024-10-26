@@ -58,20 +58,23 @@ const fg = require('fast-glob');
             }
         }
 
-        assets.split('\n')
-            .forEach(async rule => {
-                const [src, dst] = rule.split(':')
-                const files = fg.sync([src], {dot: false, onlyFiles: true})
-                if (files.length && !/\/$/.test(dst)) {
-                    await uploadOneFile(files[0], dst)
-                } else if (files.length && /\/$/.test(dst)) {
-                    await Promise.all(files.map(async file => {
-                        const base = src.replace(/\*+$/g, '')
-                        const filename = file.replace(base, '')
-                        await uploadOneFile(file, `${dst}${filename}`)
-                    }))
+        for (let rule of assets.split('\n')) {
+            core.info(`Rule: ${rule}`)
+            const [src, dst] = rule.split(':')
+            const files = fg.sync([src], {dot: false, onlyFiles: true})
+            if (!files.length) {
+                continue;
+            }
+            if (/\/$/.test(dst)) {
+                for (let file of files) {
+                    const base = src.replace(/\*+$/g, '')
+                    const filename = file.replace(base, '')
+                    await uploadOneFile(file, `${dst}${filename}`)
                 }
-            })
+            } else {
+                await uploadOneFile(files[0], dst)
+            }
+        }
 
     } catch (err) {
         core.setFailed(err.message)
