@@ -5,6 +5,7 @@ const fs = require('fs');
 const {resolve} = require('path');
 const fg = require('fast-glob');
 const path = require('path');
+const axios = require('axios');
 
 const isWin = process.platform === 'win32';
 const isMac = process.platform === 'darwin';
@@ -14,10 +15,12 @@ const isLinux = process.platform === 'linux';
     try {
         // OSS 实例化
         const opts = {
-                accessKeyId: core.getInput('key-id'),
-                accessKeySecret: core.getInput('key-secret'),
-                bucket: core.getInput('bucket')
-            }
+            accessKeyId: core.getInput('key-id'),
+            accessKeySecret: core.getInput('key-secret'),
+            bucket: core.getInput('bucket')
+        };
+        const callback = core.getInput('callback');
+        let successUrls = [];
 
         ;['region', 'endpoint']
             .filter(name => core.getInput(name))
@@ -74,10 +77,23 @@ const isLinux = process.platform === 'linux';
                 for (let file of files) {
                     const filename = path.basename(file)
                     await uploadOneFile(file, `${dst}${filename}`)
+                    successUrls.push(`${dst}${filename}`)
                 }
             } else {
                 await uploadOneFile(files[0], dst)
+                successUrls.push(dst)
             }
+        }
+
+        if (callback && successUrls.length > 0) {
+            core.info(`callback for : ${successUrls.length} urls`)
+            // GET callback with data = {successUrls}
+            const res = await axios.get(callback, {
+                params: {
+                    data: successUrls.join(',')
+                }
+            })
+            core.info(`callback response: ${res.status} ${res.statusText}`)
         }
 
     } catch (err) {

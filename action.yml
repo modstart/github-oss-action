@@ -19,7 +19,9 @@ inputs:
     required: true
   timeout:
     required: false
-    default: 600
+    default: 3600
+  callback:
+    required: false
 runs:
   using: 'node20'
   main: 'lib/index.js'
