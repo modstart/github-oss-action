@@ -20,7 +20,7 @@ const isLinux = process.platform === 'linux';
             bucket: core.getInput('bucket')
         };
         const callback = core.getInput('callback');
-        const uploadUrlPrefix = core.getInput('uploadUrlPrefix');
+        const callbackUrlExpire = core.getInput('callbackUrlExpire');
         let successUrls = [];
 
         ;['region', 'endpoint']
@@ -90,7 +90,10 @@ const isLinux = process.platform === 'linux';
             core.info(`callback for : ${successUrls.length} urls`)
             let postData = {}
             successUrls.forEach((url, index) => {
-                postData[`url${index}`] = uploadUrlPrefix ? `${uploadUrlPrefix}/${url}` : url
+                // sign url with oss for timeout
+                postData[`url${index}`] = oss.signatureUrl(url, {
+                    expires: callbackUrlExpire
+                })
             })
             // GET callback with data = {successUrls}
             const res = await axios.get(callback, {

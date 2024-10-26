@@ -20,8 +20,9 @@ inputs:
   timeout:
     required: false
     default: 3600
-  uploadUrlPrefix:
+  callbackUrlExpire:
     required: false
+    default: 604800
   callback:
     required: false
 runs:
