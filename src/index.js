@@ -20,6 +20,7 @@ const isLinux = process.platform === 'linux';
             bucket: core.getInput('bucket')
         };
         const callback = core.getInput('callback');
+        const uploadUrlPrefix = core.getInput('uploadUrlPrefix');
         let successUrls = [];
 
         ;['region', 'endpoint']
@@ -87,10 +88,14 @@ const isLinux = process.platform === 'linux';
 
         if (callback && successUrls.length > 0) {
             core.info(`callback for : ${successUrls.length} urls`)
+            let postData = {}
+            successUrls.forEach((url, index) => {
+                postData[`url${index}`] = uploadUrlPrefix ? `${uploadUrlPrefix}/${url}` : url
+            })
             // GET callback with data = {successUrls}
             const res = await axios.get(callback, {
                 params: {
-                    data: successUrls.join(',')
+                    data: JSON.stringify(postData)
                 }
             })
             core.info(`callback response: ${res.status} ${res.statusText}`)
