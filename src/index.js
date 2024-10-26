@@ -4,6 +4,11 @@ const OSS = require('ali-oss');
 const fs = require('fs');
 const {resolve} = require('path');
 const fg = require('fast-glob');
+const path = require('path');
+
+const isWin = process.platform === 'win32';
+const isMac = process.platform === 'darwin';
+const isLinux = process.platform === 'linux';
 
 (async () => {
     try {
@@ -37,19 +42,19 @@ const fg = require('fast-glob');
             let lastPercentage = null;
             for (let i = 0; i < 5; i++) {
                 try {
-                    core.info(`Upload ${localPath} to ${desc}`)
+                    core.info(`upload ${localPath} to ${desc}`)
                     const result = await oss.multipartUpload(desc, resolve(localPath), {
                         checkpoint,
                         async progress(percentage, cpt) {
                             checkpoint = cpt;
                             percentage = parseInt(percentage * 100);
                             if (lastPercentage !== percentage) {
-                                core.info(`Upload Progress: ${percentage}%`);
+                                core.info(`upload progress: ${percentage}%`);
                                 lastPercentage = percentage;
                             }
                         },
                     });
-                    core.info('Upload success')
+                    core.info('upload success')
                     break;
                 } catch (e) {
                     core.error(e);
@@ -61,14 +66,13 @@ const fg = require('fast-glob');
         for (let rule of assets.split('\n')) {
             const [src, dst] = rule.split(':')
             const files = fg.sync([src], {dot: false, onlyFiles: true})
-            core.info(`Upload for rule: ${rule} - ${JSON.stringify(files)}`)
+            core.info(`glob for rule: ${rule} - ${JSON.stringify(files)}`)
             if (!files.length) {
                 continue;
             }
             if (/\/$/.test(dst)) {
                 for (let file of files) {
-                    const base = src.replace(/\*+$/g, '')
-                    const filename = file.replace(base, '')
+                    const filename = path.basename(file)
                     await uploadOneFile(file, `${dst}${filename}`)
                 }
             } else {
