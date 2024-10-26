@@ -78,11 +78,17 @@ const isLinux = process.platform === 'linux';
                 for (let file of files) {
                     const filename = path.basename(file)
                     await uploadOneFile(file, `${dst}${filename}`)
-                    successUrls.push(`${dst}${filename}`)
+                    successUrls.push({
+                        name: filename,
+                        path:`${dst}${filename}`
+                    })
                 }
             } else {
                 await uploadOneFile(files[0], dst)
-                successUrls.push(dst)
+                successUrls.push({
+                    name: path.basename(files[0]),
+                    path: dst
+                })
             }
         }
 
@@ -90,8 +96,7 @@ const isLinux = process.platform === 'linux';
             core.info(`callback for : ${successUrls.length} urls`)
             let postData = {}
             successUrls.forEach((url, index) => {
-                // sign url with oss for timeout
-                postData[`URL${index}`] = oss.signatureUrl(url, {
+                postData[url.name] = oss.signatureUrl(url.path, {
                     expires: callbackUrlExpire
                 })
             })
