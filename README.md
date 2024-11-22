@@ -6,6 +6,7 @@
 
 ## 必须
 
+- `title`: 打包说明
 - `key-id`: OSS AccessKeyId
 - `key-secret`: OSS AccessKeySecret
 - `region`: 区域，如 `oss-cn-shenzhen`，和 `endpoint` 二选一

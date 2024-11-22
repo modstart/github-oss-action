@@ -13,6 +13,7 @@ const isLinux = process.platform === 'linux';
 
 (async () => {
     try {
+        const title = core.getInput('title')
         // OSS 实例化
         const opts = {
             accessKeyId: core.getInput('key-id'),
@@ -95,6 +96,9 @@ const isLinux = process.platform === 'linux';
         if (callback && successUrls.length > 0) {
             core.info(`callback for : ${successUrls.length} urls`)
             let postData = {}
+            if(title){
+                postData['title'] = title
+            }
             successUrls.forEach((url, index) => {
                 postData[url.name] = oss.signatureUrl(url.path, {
                     expires: callbackUrlExpire

@@ -5,6 +5,9 @@ branding:
   icon: 'upload-cloud'
   color: 'yellow'
 inputs:
+  title:
+    description: 'The title of the action'
+    required: false
   region:
     required: false
   endpoint:
