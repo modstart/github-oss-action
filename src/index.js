@@ -108,9 +108,10 @@ const isLinux = process.platform === 'linux';
             const res = await axios.get(callback, {
                 params: {
                     data: JSON.stringify(postData)
-                }
+                },
+                proxy: false
             })
-            core.info(`callback response: ${res.status} ${res.statusText}`)
+            core.info(`callback response: ${res.status} ${res.statusText} ${JSON.stringify(res.data)}`)
         }
 
     } catch (err) {
