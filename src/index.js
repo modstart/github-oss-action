@@ -57,6 +57,8 @@ const formatSize = (size) => {
         const uploadOneFile = async (localPath, desc) => {
             let checkpoint = null;
             let lastPercentage = null;
+            const size = fs.statSync(localPath).size
+            const sizeFormatString = formatSize(size)
             for (let i = 0; i < 5; i++) {
                 try {
                     core.info(`upload ${localPath} to ${desc}`)
@@ -64,9 +66,10 @@ const formatSize = (size) => {
                         checkpoint,
                         async progress(percentage, cpt) {
                             checkpoint = cpt;
+                            const uploadedSize = size * percentage;
                             percentage = parseInt(percentage * 100);
                             if (lastPercentage !== percentage) {
-                                core.info(`upload progress: ${percentage}%`);
+                                core.info(`upload progress: ${percentage}%（${formatSize(uploadedSize)}/${sizeFormatString}）`);
                                 lastPercentage = percentage;
                             }
                         },
