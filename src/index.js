@@ -130,6 +130,9 @@ const formatSize = (size) => {
                 params: {
                     data: JSON.stringify(postData)
                 },
+                headers: {
+                    'User-Agent': 'github-oss-action',
+                },
                 proxy: false
             })
             core.info(`callback response: ${res.status} ${res.statusText} ${JSON.stringify(res.data)}`)
