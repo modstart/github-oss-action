@@ -8,26 +8,40 @@ inputs:
   title:
     description: 'The title of the action'
     required: false
+    default: 'Upload to OSS'
   region:
-    required: false
+    required: true
+    description: 'The region of the OSS bucket, e.g., oss-cn-hangzhou'
   endpoint:
-    required: false
+    required: true
+    description: 'The endpoint of the OSS bucket, e.g., oss-cn-hangzhou.aliyuncs.com'
   key-id:
     required: true
+    description: 'The access key ID for the OSS bucket'
   key-secret:
     required: true
+    description: 'The access key secret for the OSS bucket'
   bucket:
     required: true
+    description: 'The name of the OSS bucket to upload to'
   assets:
     required: true
+    description: 'Assets to upload, can be a single file or a list of files'
   timeout:
     required: false
-    default: 3600
+    default: '3600'
+    description: 'Timeout for the upload in seconds'
+  callbackUrlSign:
+    required: false
+    default: 'true'
+    description: 'Whether to sign the callback URL'
   callbackUrlExpire:
     required: false
-    default: 604800
+    default: '604800'
+    description: 'Expiration time for the callback URL in seconds'
   callback:
     required: false
+    description: 'Callback URL for the upload'
 runs:
   using: 'node20'
   main: 'lib/index.js'

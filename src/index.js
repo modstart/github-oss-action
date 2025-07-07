@@ -33,6 +33,7 @@ const formatSize = (size) => {
             bucket: core.getInput('bucket')
         };
         const callback = core.getInput('callback');
+        const callbackUrlSign = core.getInput('callbackUrlSign');
         const callbackUrlExpire = core.getInput('callbackUrlExpire');
         let successUrls = [];
 
@@ -121,9 +122,13 @@ const formatSize = (size) => {
                     url.name,
                     `(${formatSize(url.size)})`,
                 ].join('')
-                postData[key] = oss.signatureUrl(url.path, {
-                    expires: callbackUrlExpire
-                })
+                if(callbackUrlSign==='true'){
+                    postData[key] = oss.signatureUrl(url.path, {
+                        expires: callbackUrlExpire
+                    })
+                }else{
+                    postData[key] = oss.getObjectUrl(url.path)
+                }
             })
             // GET callback with data = {successUrls}
             const res = await axios.get(callback, {
