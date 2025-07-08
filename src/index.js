@@ -127,7 +127,7 @@ const formatSize = (size) => {
                         expires: callbackUrlExpire
                     })
                 }else{
-                    postData[key] = oss.getObjectUrl(url.path)
+                    postData[key] = oss.generateObjectUrl(url.path)
                 }
             })
             // GET callback with data = {successUrls}
