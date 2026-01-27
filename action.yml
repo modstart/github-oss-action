@@ -42,6 +42,9 @@ inputs:
   callback:
     required: false
     description: 'Callback URL for the upload'
+  callbackTitle:
+    required: false
+    description: 'Title sent as separate query parameter in callback'
 runs:
   using: 'node20'
   main: 'lib/index.js'

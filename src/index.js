@@ -23,6 +23,24 @@ const formatSize = (size) => {
     }
 }
 
+// Generate random string for placeholder
+const generateRandomString = (length = 8) => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+}
+
+// Replace placeholders in template string
+const replacePlaceholders = (template, fileName, randomStr) => {
+    const nameWithoutExt = path.parse(fileName).name;
+    return template
+        .replace(/{random}/g, randomStr)
+        .replace(/{name}/g, nameWithoutExt);
+}
+
 (async () => {
     try {
         const title = core.getInput('title')
@@ -87,17 +105,24 @@ const formatSize = (size) => {
         for (let rule of assets.split('\n')) {
             const parts = rule.split(':')
             const src = parts[0]
-            const dst = parts[1]
-            const forceDownloadName = parts[2] || null  // 第三部分是强制下载文件名
+            const dstTemplate = parts[1]
+            const forceDownloadNameTemplate = parts[2] || null  // Third part for force download name
 
             const files = fg.sync([src], { dot: false, onlyFiles: true })
             core.info(`glob for rule: ${rule} - ${JSON.stringify(files)}`)
             if (!files.length) {
                 continue;
             }
-            if (/\/$/.test(dst)) {
+            if (/\/$/.test(dstTemplate)) {
+                // Directory destination (ends with /)
                 for (let file of files) {
                     const filename = path.basename(file)
+                    const randomStr = generateRandomString()
+                    const dst = replacePlaceholders(dstTemplate, filename, randomStr)
+                    let forceDownloadName = forceDownloadNameTemplate
+                    if (forceDownloadNameTemplate) {
+                        forceDownloadName = replacePlaceholders(forceDownloadNameTemplate, filename, randomStr)
+                    }
                     await uploadOneFile(file, `${dst}${filename}`)
                     successUrls.push({
                         name: filename,
@@ -107,13 +132,23 @@ const formatSize = (size) => {
                     })
                 }
             } else {
-                await uploadOneFile(files[0], dst)
-                successUrls.push({
-                    name: path.basename(files[0]),
-                    path: dst,
-                    size: fs.statSync(files[0]).size,
-                    forceDownloadName: forceDownloadName
-                })
+                // File destination or template with placeholders
+                for (let file of files) {
+                    const filename = path.basename(file)
+                    const randomStr = generateRandomString()
+                    const dst = replacePlaceholders(dstTemplate, filename, randomStr)
+                    let forceDownloadName = forceDownloadNameTemplate
+                    if (forceDownloadNameTemplate) {
+                        forceDownloadName = replacePlaceholders(forceDownloadNameTemplate, filename, randomStr)
+                    }
+                    await uploadOneFile(file, dst)
+                    successUrls.push({
+                        name: filename,
+                        path: dst,
+                        size: fs.statSync(file).size,
+                        forceDownloadName: forceDownloadName
+                    })
+                }
             }
         }
 
@@ -142,11 +177,16 @@ const formatSize = (size) => {
                     postData[key] = oss.generateObjectUrl(url.path)
                 }
             })
-            // GET callback with data = {successUrls}
+            // GET callback with data = {successUrls} and optional callbackTitle
+            const params = {
+                data: JSON.stringify(postData)
+            }
+            const callbackTitle = core.getInput('callbackTitle')
+            if (callbackTitle) {
+                params.title = callbackTitle
+            }
             const res = await axios.get(callback, {
-                params: {
-                    data: JSON.stringify(postData)
-                },
+                params: params,
                 headers: {
                     'User-Agent': 'github-oss-action',
                 },
