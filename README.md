@@ -12,7 +12,9 @@
 - `region`: 区域，如 `oss-cn-shenzhen`，和 `endpoint` 二选一
 - `endpoint`: 优先级高于 `region`，可填写内网节点、加速节点，和 `region` 二选一
 - `bucket`: Bucket 名称
-- `assets`: 上传的资源。每行一条规则，格式：`源路径:目标路径`
+- `assets`: 上传的资源。每行一条规则，格式：
+  - 一个冒号：`源路径:目标路径`
+  - 两个冒号：`源路径:目标路径:强制下载文件名`（第三部分指定下载时强制保存的文件名）
 - `timeout`: 可选，上传超时时间，默认 3600，单位：秒
 - `callback`: 可选，上传完成后的回调地址，上传完成后会以 `GET` 请求的方式调用该地址
 - `callbackUrlExpire`: 可选，回调地址的有效期，默认 604800（7 天），单位：秒
@@ -35,6 +37,7 @@
       a/**:/remote-a/
       b/**:/remote-b/
       c.txt:/rc.txt
+      d.zip:/remote-d/d.zip:download.zip
 ```
 
 ## 高级功能

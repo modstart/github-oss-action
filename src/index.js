@@ -2,7 +2,7 @@ const core = require('@actions/core');
 const github = require('@actions/github');
 const OSS = require('ali-oss');
 const fs = require('fs');
-const {resolve} = require('path');
+const { resolve } = require('path');
 const fg = require('fast-glob');
 const path = require('path');
 const axios = require('axios');
@@ -48,7 +48,7 @@ const formatSize = (size) => {
         const oss = new OSS(opts)
 
         // 上传资源
-        const assets = core.getInput('assets', {required: true})
+        const assets = core.getInput('assets', { required: true })
 
         const timeout = core.getInput('timeout')
         const uploadParam = {
@@ -85,8 +85,12 @@ const formatSize = (size) => {
         }
 
         for (let rule of assets.split('\n')) {
-            const [src, dst] = rule.split(':')
-            const files = fg.sync([src], {dot: false, onlyFiles: true})
+            const parts = rule.split(':')
+            const src = parts[0]
+            const dst = parts[1]
+            const forceDownloadName = parts[2] || null  // 第三部分是强制下载文件名
+
+            const files = fg.sync([src], { dot: false, onlyFiles: true })
             core.info(`glob for rule: ${rule} - ${JSON.stringify(files)}`)
             if (!files.length) {
                 continue;
@@ -98,7 +102,8 @@ const formatSize = (size) => {
                     successUrls.push({
                         name: filename,
                         path: `${dst}${filename}`,
-                        size: fs.statSync(file).size
+                        size: fs.statSync(file).size,
+                        forceDownloadName: forceDownloadName
                     })
                 }
             } else {
@@ -106,7 +111,8 @@ const formatSize = (size) => {
                 successUrls.push({
                     name: path.basename(files[0]),
                     path: dst,
-                    size: fs.statSync(files[0]).size
+                    size: fs.statSync(files[0]).size,
+                    forceDownloadName: forceDownloadName
                 })
             }
         }
@@ -122,11 +128,17 @@ const formatSize = (size) => {
                     url.name,
                     `(${formatSize(url.size)})`,
                 ].join('')
-                if(callbackUrlSign==='true'){
-                    postData[key] = oss.signatureUrl(url.path, {
+                if (callbackUrlSign === 'true' || url.forceDownloadName) {
+                    const signOptions = {
                         expires: callbackUrlExpire
-                    })
-                }else{
+                    }
+                    if (url.forceDownloadName) {
+                        signOptions.response = {
+                            'content-disposition': `attachment; filename="${encodeURIComponent(url.forceDownloadName)}"`
+                        }
+                    }
+                    postData[key] = oss.signatureUrl(url.path, signOptions)
+                } else {
                     postData[key] = oss.generateObjectUrl(url.path)
                 }
             })
@@ -140,7 +152,7 @@ const formatSize = (size) => {
                 },
                 proxy: false
             })
-            core.info(`callback response: ${res.status} ${res.statusText} ${JSON.stringify(res.data)}`)
+            core.info(`callback response: ${res.status} ${res.statusText} ${JSON.stringify(res.data)} `)
         }
 
     } catch (err) {
