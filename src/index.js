@@ -179,9 +179,10 @@ const replacePlaceholders = (template, fileName, randomStr) => {
                 }
             });
 
-            // Expose downloads map as a masked output for downstream jobs
+            // Expose downloads map as an output for downstream jobs
+            // (masking is handled by the workflow via ::add-mask:: to avoid
+            //  GitHub's "skip output since it may contain secret" issue)
             const downloadsJson = JSON.stringify(postData);
-            core.setSecret(downloadsJson);
             core.setOutput('downloads', downloadsJson);
 
             // Callback (existing behavior)
