@@ -152,40 +152,41 @@ const replacePlaceholders = (template, fileName, randomStr) => {
             }
         }
 
-        // Build download URL map and expose as output (regardless of callback)
+        // Build download URL maps
         if (successUrls.length > 0) {
             core.info(`generating download urls for ${successUrls.length} files`);
+            // postData includes size in key (for callback, existing behavior)
             let postData = {};
+            // downloadData uses bare filename as key (for workflow output)
+            let downloadData = {};
             if (title) {
                 postData['title'] = title;
             }
             successUrls.forEach((url) => {
-                const key = [
+                const signedUrl = oss.signatureUrl(url.path, {
+                    expires: callbackUrlExpire,
+                    ...(url.forceDownloadName ? {
+                        response: {
+                            'content-disposition': `attachment; filename="${encodeURIComponent(url.forceDownloadName)}"`
+                        }
+                    } : {})
+                });
+                // Key with size (for callback)
+                const keyWithSize = [
                     url.name,
                     `(${formatSize(url.size)})`,
                 ].join('');
-                if (callbackUrlSign === 'true' || url.forceDownloadName) {
-                    const signOptions = {
-                        expires: callbackUrlExpire
-                    };
-                    if (url.forceDownloadName) {
-                        signOptions.response = {
-                            'content-disposition': `attachment; filename="${encodeURIComponent(url.forceDownloadName)}"`
-                        };
-                    }
-                    postData[key] = oss.signatureUrl(url.path, signOptions);
-                } else {
-                    postData[key] = oss.generateObjectUrl(url.path);
-                }
+                postData[keyWithSize] = signedUrl;
+                // Key without size (for workflow downloads output)
+                downloadData[url.name] = signedUrl;
             });
 
-            // Expose downloads map as an output for downstream jobs
-            // (masking is handled by the workflow via ::add-mask:: to avoid
-            //  GitHub's "skip output since it may contain secret" issue)
-            const downloadsJson = JSON.stringify(postData);
+            // Expose downloads map (bare filenames) as masked output + artifact source
+            const downloadsJson = JSON.stringify(downloadData);
+            core.setSecret(downloadsJson);
             core.setOutput('downloads', downloadsJson);
 
-            // Callback (existing behavior)
+            // Callback (existing behavior, uses postData with size in keys)
             if (callback) {
                 core.info(`callback for : ${successUrls.length} urls`);
                 const params = {
