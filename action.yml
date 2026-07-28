@@ -45,6 +45,9 @@ inputs:
   callbackTitle:
     required: false
     description: 'Title sent as separate query parameter in callback'
+outputs:
+  downloads:
+    description: 'JSON map of uploaded filenames to OSS download URLs'
 runs:
   using: 'node20'
   main: 'lib/index.js'

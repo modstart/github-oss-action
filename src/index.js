@@ -152,47 +152,57 @@ const replacePlaceholders = (template, fileName, randomStr) => {
             }
         }
 
-        if (callback && successUrls.length > 0) {
-            core.info(`callback for : ${successUrls.length} urls`)
-            let postData = {}
+        // Build download URL map and expose as output (regardless of callback)
+        if (successUrls.length > 0) {
+            core.info(`generating download urls for ${successUrls.length} files`);
+            let postData = {};
             if (title) {
-                postData['title'] = title
+                postData['title'] = title;
             }
-            successUrls.forEach((url, index) => {
+            successUrls.forEach((url) => {
                 const key = [
                     url.name,
                     `(${formatSize(url.size)})`,
-                ].join('')
+                ].join('');
                 if (callbackUrlSign === 'true' || url.forceDownloadName) {
                     const signOptions = {
                         expires: callbackUrlExpire
-                    }
+                    };
                     if (url.forceDownloadName) {
                         signOptions.response = {
                             'content-disposition': `attachment; filename="${encodeURIComponent(url.forceDownloadName)}"`
-                        }
+                        };
                     }
-                    postData[key] = oss.signatureUrl(url.path, signOptions)
+                    postData[key] = oss.signatureUrl(url.path, signOptions);
                 } else {
-                    postData[key] = oss.generateObjectUrl(url.path)
+                    postData[key] = oss.generateObjectUrl(url.path);
                 }
-            })
-            // GET callback with data = {successUrls} and optional callbackTitle
-            const params = {
-                data: JSON.stringify(postData)
+            });
+
+            // Expose downloads map as a masked output for downstream jobs
+            const downloadsJson = JSON.stringify(postData);
+            core.setSecret(downloadsJson);
+            core.setOutput('downloads', downloadsJson);
+
+            // Callback (existing behavior)
+            if (callback) {
+                core.info(`callback for : ${successUrls.length} urls`);
+                const params = {
+                    data: JSON.stringify(postData)
+                };
+                const callbackTitle = core.getInput('callbackTitle');
+                if (callbackTitle) {
+                    params.title = callbackTitle;
+                }
+                const res = await axios.get(callback, {
+                    params: params,
+                    headers: {
+                        'User-Agent': 'github-oss-action',
+                    },
+                    proxy: false
+                });
+                core.info(`callback response: ${res.status} ${res.statusText} ${JSON.stringify(res.data)}`);
             }
-            const callbackTitle = core.getInput('callbackTitle')
-            if (callbackTitle) {
-                params.title = callbackTitle
-            }
-            const res = await axios.get(callback, {
-                params: params,
-                headers: {
-                    'User-Agent': 'github-oss-action',
-                },
-                proxy: false
-            })
-            core.info(`callback response: ${res.status} ${res.statusText} ${JSON.stringify(res.data)} `)
         }
 
     } catch (err) {
