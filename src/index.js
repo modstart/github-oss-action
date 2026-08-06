@@ -69,19 +69,20 @@ const replacePlaceholders = (template, fileName, randomStr) => {
         const assets = core.getInput('assets', { required: true })
 
         const timeout = core.getInput('timeout')
-        const uploadParam = {
-            timeout: 1000 * Number(timeout)
-        }
+        // Convert seconds to ms; fallback to 3600s if input is missing/empty
+        const timeoutMs = 1000 * Number(timeout || 3600)
 
         const uploadOneFile = async (localPath, desc) => {
             let checkpoint = null;
             let lastPercentage = null;
             const size = fs.statSync(localPath).size
             const sizeFormatString = formatSize(size)
+            let lastError = null;
             for (let i = 0; i < 5; i++) {
                 try {
                     core.info(`upload ${localPath} to ${desc}`)
-                    const result = await oss.multipartUpload(desc, resolve(localPath), {
+                    await oss.multipartUpload(desc, resolve(localPath), {
+                        timeout: timeoutMs,
                         checkpoint,
                         async progress(percentage, cpt) {
                             checkpoint = cpt;
@@ -94,12 +95,16 @@ const replacePlaceholders = (template, fileName, randomStr) => {
                         },
                     });
                     core.info('upload success')
-                    break;
+                    return;
                 } catch (e) {
-                    core.error(e);
-                    core.setFailed(e.message)
+                    lastError = e;
+                    const resumeHint = checkpoint ? ', will resume from checkpoint on next attempt' : '';
+                    core.warning(`upload attempt ${i + 1}/5 failed: ${e.message}${resumeHint}`);
                 }
             }
+            // All attempts failed: signal failure so the caller does NOT
+            // treat the file as uploaded and does NOT fire the callback.
+            throw lastError;
         }
 
         for (let rule of assets.split('\n')) {

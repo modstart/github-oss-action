@@ -10,7 +10,7 @@
 - `key-id`: OSS AccessKeyId
 - `key-secret`: OSS AccessKeySecret
 - `region`: 区域，如 `oss-cn-shenzhen`，和 `endpoint` 二选一
-- `endpoint`: 优先级高于 `region`，可填写内网节点、加速节点，和 `region` 二选一
+- `endpoint`: 优先级高于 `region`，可填写内网节点、加速节点，和 `region` 二选一。**建议显式使用 `https://` 前缀**（如 `https://oss-cn-hangzhou.aliyuncs.com`），GitHub 托管 Runner 位于海外，通过 HTTP(80) 连接国内 OSS 节点容易超时
 - `bucket`: Bucket 名称
 - `assets`: 上传的资源。每行一条规则，格式：
   - 一个冒号：`源路径.zip:目标路径.zip`
@@ -19,7 +19,7 @@
   - 使用占位符：`code/*.zip:temp/{random}.zip:{name}.zip`（支持文件通配符和占位符）
     - `{random}` - 8位随机字符串（确保文件名唯一性）
     - `{name}` - 源文件名（不含扩展名）
-- `timeout`: 可选，上传超时时间，默认 3600，单位：秒
+- `timeout`: 可选，单次上传请求超时时间，默认 3600，单位：秒。上传失败会自动断点续传重试 5 次；若最终仍失败，任务会失败退出，**不会**触发回调
 - `callback`: 可选，上传完成后的回调地址，上传完成后会以 `GET` 请求的方式调用该地址
 - `callbackTitle`: 可选，回调时作为独立的查询参数发送的标题
 - `callbackUrlExpire`: 可选，回调地址的有效期，默认 604800（7 天），单位：秒
